@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Table System</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1>Data Table System</h1>
+        <p>Advanced table with search, filter, and aggregation capabilities</p>
+      </header>
+      
+      <main class="container">
+        <!-- Controls Section -->
+        <div class="controls">
+          <!-- Search -->
+          <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search across all columns..." />
+            <button id="clearSearch">Clear</button>
+          </div>
+          
+          <!-- Filters -->
+          <div class="filters">
+            <div class="filter-group">
+              <label for="categoryFilter">Category:</label>
+              <select id="categoryFilter">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            
+            <div class="filter-group">
+              <label for="statusFilter">Status:</label>
+              <select id="statusFilter">
+                <option value="">All Status</option>
+              </select>
+            </div>
+            
+            <div class="filter-group">
+              <label for="minPrice">Min Price:</label>
+              <input type="number" id="minPrice" placeholder="0" />
+            </div>
+            
+            <div class="filter-group">
+              <label for="maxPrice">Max Price:</label>
+              <input type="number" id="maxPrice" placeholder="1000" />
+            </div>
+          </div>
+          
+          <!-- Aggregation Panel -->
+          <div class="aggregation-panel">
+            <h3>Data Aggregation</h3>
+            <div class="agg-results">
+              <div class="agg-item">
+                <span class="agg-label">Total Records:</span>
+                <span id="totalRecords">0</span>
+              </div>
+              <div class="agg-item">
+                <span class="agg-label">Average Price:</span>
+                <span id="avgPrice">$0</span>
+              </div>
+              <div class="agg-item">
+                <span class="agg-label">Total Value:</span>
+                <span id="totalValue">$0</span>
+              </div>
+              <div class="agg-item">
+                <span class="agg-label">Max Price:</span>
+                <span id="maxPriceAgg">$0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Table Section -->
+        <div class="table-container">
+          <div class="table-header">
+            <h2>Product Data Table</h2>
+            <div class="table-controls">
+              <button id="exportData">Export CSV</button>
+              <button id="addRecord">Add Record</button>
+            </div>
+          </div>
+          
+          <div class="table-wrapper">
+            <table id="dataTable" class="data-table">
+              <thead>
+                <tr>
+                  <th data-column="id" class="sortable">ID <span class="sort-icon">↕</span></th>
+                  <th data-column="name" class="sortable">Name <span class="sort-icon">↕</span></th>
+                  <th data-column="category" class="sortable">Category <span class="sort-icon">↕</span></th>
+                  <th data-column="price" class="sortable">Price <span class="sort-icon">↕</span></th>
+                  <th data-column="quantity" class="sortable">Quantity <span class="sort-icon">↕</span></th>
+                  <th data-column="status" class="sortable">Status <span class="sort-icon">↕</span></th>
+                  <th data-column="date" class="sortable">Date Added <span class="sort-icon">↕</span></th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <!-- Data will be populated here -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="pagination">
+            <button id="prevPage" disabled>Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPage" disabled>Next</button>
+            <select id="pageSize">
+              <option value="10">10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+              <option value="100">100 per page</option>
+            </select>
+          </div>
+        </div>
+      </main>
+      
+      <!-- Modal for Add/Edit Record -->
+      <div id="recordModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="modalTitle">Add New Record</h3>
+            <button id="closeModal">&times;</button>
+          </div>
+          <form id="recordForm">
+            <div class="form-group">
+              <label for="recordName">Name:</label>
+              <input type="text" id="recordName" required />
+            </div>
+            <div class="form-group">
+              <label for="recordCategory">Category:</label>
+              <select id="recordCategory" required>
+                <option value="">Select Category</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Books">Books</option>
+                <option value="Home">Home</option>
+                <option value="Sports">Sports</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="recordPrice">Price:</label>
+              <input type="number" id="recordPrice" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label for="recordQuantity">Quantity:</label>
+              <input type="number" id="recordQuantity" required />
+            </div>
+            <div class="form-group">
+              <label for="recordStatus">Status:</label>
+              <select id="recordStatus" required>
+                <option value="">Select Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Discontinued">Discontinued</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button type="submit" id="saveRecord">Save</button>
+              <button type="button" id="cancelRecord">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>Developed by <span class="developer">Mohamed Osama</span></p>
+      </div>
+    </footer>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
