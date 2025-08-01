@@ -57,6 +57,14 @@ export class DataTable {
 
   async fetchAndRenderData() {
     try {
+      console.log('Fetching data - Page:', this.currentPage, 'Loading:', this.isLoading);
+      
+      // Prevent multiple concurrent requests
+      if (this.isLoading) {
+        console.log('Already loading, skipping request');
+        return;
+      }
+      
       this.setLoading(true);
       
       const filters = {
@@ -66,12 +74,29 @@ export class DataTable {
         ...(this.sortColumn && { sortBy: this.sortColumn, sortOrder: this.sortDirection })
       };
 
-      const response = await this.apiService.getProducts(filters);
+      console.log('Sending filters:', filters);
+      
+      // Add timeout protection
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const response = await Promise.race([
+        this.apiService.getProducts(filters),
+        timeoutPromise
+      ]);
+      
+      console.log('API Response:', response);
       
       if (response.success) {
         this.currentData = response.data;
         this.paginationInfo = response.pagination;
         this.aggregationData = response.aggregations;
+        
+        console.log('Pagination info:', this.paginationInfo);
+        
+        // Set loading to false BEFORE rendering
+        this.setLoading(false);
         
         this.renderTable();
         this.updateAggregation();
@@ -82,13 +107,13 @@ export class DataTable {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      this.showError('Failed to fetch data from server');
-    } finally {
       this.setLoading(false);
+      this.showError('Failed to fetch data from server');
     }
   }
 
   setLoading(loading) {
+    console.log('Setting loading state to:', loading);
     this.isLoading = loading;
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
@@ -103,6 +128,10 @@ export class DataTable {
         </tr>
       `;
     }
+    
+    // Update pagination buttons immediately when loading state changes
+    this.updatePagination();
+    // Note: When loading is false, renderTable() will be called separately to show data
   }
 
   showError(message) {
@@ -169,24 +198,41 @@ export class DataTable {
     const nextPage = document.getElementById('nextPage');
     const pageSize = document.getElementById('pageSize');
 
-    prevPage?.addEventListener('click', () => {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        this.fetchAndRenderData();
+    prevPage?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      console.log('Previous page clicked, current loading state:', this.isLoading);
+      
+      if (this.isLoading || this.currentPage <= 1) {
+        console.log('Preventing previous page navigation');
+        return;
       }
+      
+      console.log('Navigating to previous page');
+      this.currentPage--;
+      await this.fetchAndRenderData();
     });
 
-    nextPage?.addEventListener('click', () => {
-      if (this.currentPage < this.paginationInfo.totalPages) {
-        this.currentPage++;
-        this.fetchAndRenderData();
+    nextPage?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      console.log('Next page clicked, current loading state:', this.isLoading);
+      console.log('Current page:', this.currentPage, 'Total pages:', this.paginationInfo?.totalPages);
+      
+      if (this.isLoading || !this.paginationInfo || this.currentPage >= this.paginationInfo.totalPages) {
+        console.log('Preventing next page navigation');
+        return;
       }
+      
+      console.log('Navigating to next page');
+      this.currentPage++;
+      await this.fetchAndRenderData();
     });
 
-    pageSize?.addEventListener('change', (e) => {
+    pageSize?.addEventListener('change', async (e) => {
+      if (this.isLoading) return;
+      
       this.pageSize = parseInt(e.target.value);
       this.currentPage = 1;
-      this.fetchAndRenderData();
+      await this.fetchAndRenderData();
     });
 
     // Table sorting
@@ -338,7 +384,10 @@ export class DataTable {
 
   renderTable() {
     const tbody = document.getElementById('tableBody');
-    if (!tbody || this.isLoading) return;
+    if (!tbody) return;
+
+    // Don't render if we're currently loading (loading spinner is already shown)
+    if (this.isLoading) return;
 
     if (this.currentData.length === 0) {
       tbody.innerHTML = `
@@ -387,16 +436,29 @@ export class DataTable {
   }
 
   updatePagination() {
-    if (!this.paginationInfo) return;
-
-    const { currentPage, totalPages } = this.paginationInfo;
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
     const pageInfo = document.getElementById('pageInfo');
 
-    if (prevBtn) prevBtn.disabled = currentPage <= 1;
-    if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
-    if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    if (!this.paginationInfo) {
+      // If no pagination info, disable buttons and show loading state
+      if (prevBtn) prevBtn.disabled = true;
+      if (nextBtn) nextBtn.disabled = true;
+      if (pageInfo) pageInfo.textContent = 'Loading...';
+      return;
+    }
+
+    const { currentPage, totalPages } = this.paginationInfo;
+
+    if (prevBtn) {
+      prevBtn.disabled = this.isLoading || currentPage <= 1;
+    }
+    if (nextBtn) {
+      nextBtn.disabled = this.isLoading || currentPage >= totalPages;
+    }
+    if (pageInfo) {
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    }
   }
 
   showModal(record = null) {
