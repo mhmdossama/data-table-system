@@ -265,7 +265,7 @@
       "id": 30,
       "name": "Peloton Bike+",
       "category": "Sports",
-      "price": 2495.00,
+      "price": 2495,
       "quantity": 5,
       "status": "Active",
       "date": "2024-02-05"
@@ -366,7 +366,7 @@
       "category": "Electronics",
       "price": 1199.99,
       "quantity": 30,
-      "status": "Active",
+      "status": "Discontinued",
       "date": "2024-02-16"
     },
     {

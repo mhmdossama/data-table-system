@@ -30,40 +30,36 @@ export class DataTable {
   async init() {
     this.setupEventListeners();
     await this.loadInitialData();
-    this.renderTable();
-    this.updateAggregation();
-    this.updatePagination();
+    // Note: renderTable(), updateAggregation(), and updatePagination() 
+    // are already called in fetchAndRenderData() within loadInitialData()
   }
 
   async loadInitialData() {
     try {
-      this.setLoading(true);
-      
       // Test API connection first
+      console.log('Testing API connection...');
       const healthCheck = await this.apiService.healthCheck();
       console.log('API Health Check:', healthCheck);
       
-      // Load initial data
+      // Load initial data (fetchAndRenderData will handle loading state)
       await this.fetchAndRenderData();
       await this.populateFilterOptions();
       
     } catch (error) {
       console.error('Failed to load initial data:', error);
-      this.showError('Failed to connect to the backend server. Please make sure the server is running on port 3001.');
-    } finally {
       this.setLoading(false);
+      
+      if (error.message.includes('fetch') || error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+        this.showError('❌ Backend server is not running!<br><br>Please start the backend server:<br>1. Open terminal<br>2. Run: <code>npm run backend</code><br>3. Refresh this page');
+      } else {
+        this.showError('Failed to connect to the backend server. Please make sure the server is running on port 3001.');
+      }
     }
   }
 
   async fetchAndRenderData() {
     try {
-      console.log('Fetching data - Page:', this.currentPage, 'Loading:', this.isLoading);
-      
-      // Prevent multiple concurrent requests
-      if (this.isLoading) {
-        console.log('Already loading, skipping request');
-        return;
-      }
+      console.log('Fetching data - Page:', this.currentPage);
       
       this.setLoading(true);
       
@@ -76,15 +72,7 @@ export class DataTable {
 
       console.log('Sending filters:', filters);
       
-      // Add timeout protection
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
-      );
-      
-      const response = await Promise.race([
-        this.apiService.getProducts(filters),
-        timeoutPromise
-      ]);
+      const response = await this.apiService.getProducts(filters);
       
       console.log('API Response:', response);
       
@@ -93,7 +81,7 @@ export class DataTable {
         this.paginationInfo = response.pagination;
         this.aggregationData = response.aggregations;
         
-        console.log('Pagination info:', this.paginationInfo);
+        console.log('Data loaded successfully:', this.currentData.length, 'items');
         
         // Set loading to false BEFORE rendering
         this.setLoading(false);
@@ -108,7 +96,7 @@ export class DataTable {
     } catch (error) {
       console.error('Error fetching data:', error);
       this.setLoading(false);
-      this.showError('Failed to fetch data from server');
+      this.showError('Failed to fetch data from server: ' + error.message);
     }
   }
 
@@ -143,8 +131,11 @@ export class DataTable {
         <td colspan="8" class="error-cell">
           <div class="error-message">
             <span class="error-icon">⚠️</span>
-            <span>${message}</span>
-            <button onclick="location.reload()" class="retry-btn">Retry</button>
+            <div style="margin-left: 10px;">
+              ${message}
+              <br><br>
+              <button onclick="location.reload()" class="retry-btn">Retry</button>
+            </div>
           </div>
         </td>
       </tr>
@@ -384,12 +375,21 @@ export class DataTable {
 
   renderTable() {
     const tbody = document.getElementById('tableBody');
-    if (!tbody) return;
+    if (!tbody) {
+      console.error('tableBody element not found!');
+      return;
+    }
+
+    console.log('renderTable called - isLoading:', this.isLoading, 'currentData length:', this.currentData.length);
 
     // Don't render if we're currently loading (loading spinner is already shown)
-    if (this.isLoading) return;
+    if (this.isLoading) {
+      console.log('Skipping render because isLoading is true');
+      return;
+    }
 
     if (this.currentData.length === 0) {
+      console.log('No data to render');
       tbody.innerHTML = `
         <tr>
           <td colspan="8" class="no-data-cell">
@@ -403,6 +403,7 @@ export class DataTable {
       return;
     }
 
+    console.log('Rendering', this.currentData.length, 'rows');
     tbody.innerHTML = this.currentData.map(item => `
       <tr data-id="${item.id}">
         <td>${item.id}</td>

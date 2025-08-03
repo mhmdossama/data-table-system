@@ -1,7 +1,23 @@
 // API service layer for communicating with the backend
 export class ApiService {
-  constructor(baseUrl = 'http://localhost:3001/api') {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl) {
+    // Auto-detect the API base URL
+    if (!baseUrl) {
+      if (typeof window !== 'undefined') {
+        // In browser environment
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        this.baseUrl = isLocalhost 
+          ? 'http://localhost:3001/api'
+          : `${window.location.origin}/api`;
+      } else {
+        // Fallback for server-side or other environments
+        this.baseUrl = '/api';
+      }
+    } else {
+      this.baseUrl = baseUrl;
+    }
+    
+    console.log('API Service initialized with base URL:', this.baseUrl);
   }
 
   // Generic request method
