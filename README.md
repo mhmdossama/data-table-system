@@ -2,6 +2,12 @@
 
 A comprehensive web application built with Vite that features an advanced data table with search, filter, and aggregation capabilities.
 
+## 🌐 Live Demo
+
+**🚀 [View Live Application](https://data-table-system.vercel.app/)**
+
+Try all features including search, filtering, pagination, and data management in the live demo!
+
 ## ✨ Features
 
 ### 🔍 **Search & Filter**
@@ -70,11 +76,13 @@ The built files will be in the `dist/` folder, ready for deployment.
 
 ## 🌐 Deployment Options
 
+**🎯 Current Deployment:** [https://data-table-system.vercel.app/](https://data-table-system.vercel.app/)
+
 This project can be deployed to any static hosting service:
 
 ### **Free Hosting Options:**
+- **Vercel**: Connect your GitHub repository ✅ (Currently deployed)
 - **Netlify**: Drag & drop the `dist` folder
-- **Vercel**: Connect your GitHub repository
 - **GitHub Pages**: Upload the `dist` contents
 - **Surge.sh**: Use `surge dist/` command
 - **Firebase Hosting**: Use Firebase CLI
